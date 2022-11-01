@@ -899,7 +899,7 @@ bandwidth(uint64 bytes, uint64 times, int verbose)
 	mb = bytes / MB;
 	if (!ftiming) ftiming = stderr;
 	if (verbose) {
-		(void) fprintf(ftiming,
+		(void) fprintf(stderr,
 		    "%.4f MB in %.4f secs, %.4f MB/sec\n",
 		    mb, secs, mb/secs);
 	} else {

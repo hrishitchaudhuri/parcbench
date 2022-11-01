@@ -169,6 +169,7 @@ main(int ac, char **av)
 	strcpy(state.filename,av[optind+2]);
 	count = bytes(av[optind]);
 	if (count < MINSZ) {
+		// fprintf(stderr, "Took this exit\n");
 		exit(1);	/* I want this to be quiet */
 	}
 	if (count < XFERSIZE) {
@@ -179,6 +180,7 @@ main(int ac, char **av)
 	buf = (void *)valloc(XFERSIZE);
 	bzero(buf, XFERSIZE);
 
+	// fprintf(stderr, "Begin\n");
 	if (!strcmp("open2close", av[optind+1])) {
 		benchmp(initialize, time_with_open, cleanup,
 			0, parallel, warmup, repetitions, &state);
@@ -186,6 +188,7 @@ main(int ac, char **av)
 		benchmp(init_open, time_io_only, cleanup,
 			0, parallel, warmup, repetitions, &state);
 	} else lmbench_usage(ac, av, usage);
-	bandwidth(count, get_n() * parallel, 0);
+	bandwidth(count, get_n() * parallel, 1);
+	// fprintf(stderr, "Hi!\n");
 	return (0);
 }
