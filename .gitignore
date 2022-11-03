@@ -1,3 +1,4 @@
 *.tgz
 ./lmbench-3.0-a9/bin/*
 ./lmbench-3.0-a9/results/*
+./.vscode/*
