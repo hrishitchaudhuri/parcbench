@@ -1,38 +1,48 @@
-char *id = "$Id$\n";
-
 #include "bench.h"
 
-#define MAX_LOAD_PARALLELISM 16
-
-void    *buf;
-size_t  xfersize;
-size_t  count;
-
-typedef struct _state {
-    char filename[256];
+int main(int ac, char** av) {
     int fd;
-    int clone;
-} state_t;
+    char filename[256];
 
-void doreads(int fd) {
-    size_t size, chunk;
+    /*
+        lib_timing.c : contains benchmp(benchmp_f initialize, 
+	                                    benchmp_f benchmark,
+	                                    benchmp_f cleanup,
+	                                    int enough, 
+	                                    int parallel,
+	                                    int warmup,
+	                                    int repetitions,
+	                                    void* cookie)
 
-    size = count;
-    chunk = xfersize;
+        benchmp_f : typedef void (*benchmp_f)(iter_t iterations, void* cookie);
+            (function pointer to void fn that takes an iter_t (long) and cookie)
 
-    while (size > 0) {
-        if (size < chunk) chunk = size;
+        initialize, benchmark, cleanup : functions obeying the benchmp_f signature
+            initialize -> executed initially
+            benchmark -> code that is actually benchmarked
+            cleanup -> necessary destructor procedures
 
-        if (read(fd, buf, (size < chunk ? size : chunk)) <= 0) {
-            break;
-        }
 
-        bread(buf, size < xfersize ? size : xfersize);
-        size -= chunk;
-    }
-}
+        enough : a param that decides how long to run the bench for.
+            if 0 -> lmbench decides how long to run it
+            if !0 -> timeout, unless lmbench thinks enough is too short
 
-// iter_t is an unsigned long
-void initialize(iter_t iterations, void* cookie) {
-    state_t *state = (state_t *) cookie;
+
+        parallel : like the name suggests; multiple processes execute the benchmark
+                    concurrently. 
+
+        
+        warmup : how long to delay each child's run for.
+
+
+        NOTE : benchmp actually executes at least one child process to run the benchmarks
+            (the function is literally just a signal collector.)
+    */
+
+
+    /*
+        Big Idea 1: 
+                Benchmark function spawns multiple reader-writer processes. 
+                All try to read/write to the same file. 
+    */
 }
