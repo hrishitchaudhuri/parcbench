@@ -2,7 +2,18 @@
 #include <pthread.h>
 #include <time.h>
 #include "lib_timing.c"
-#include "bw_file_rd.c"
+
+#define MINSZ (sizeof(TYPE) * 128)
+#define CHK(x)          \
+	if ((int)(x) == -1) \
+	{                   \
+		perror(#x);     \
+		exit(1);        \
+	}
+
+void *buf;		 /* do the I/O here */
+size_t xfersize; /* do it in units of this */
+size_t count;	 /* bytes to move (can't be modified) */
 
 typedef struct _state
 {
@@ -10,6 +21,109 @@ typedef struct _state
 	int fd;
 	int clone; // if set to true, process first copies file into local buffer/process specific file and reads from that instead
 } state_t;
+
+void doit(int fd)
+{
+	size_t size, chunk;
+
+	size = count;
+	chunk = xfersize;
+	while (size > 0)
+	{
+		// While there is something to be read
+		if (size < chunk)
+			chunk = size;
+		// If size is less than chunk, then chunk is set to size, done when remaining amount to read is less than chunk
+		if (read(fd, buf, MIN(size, chunk)) <= 0)
+		{
+			// Reads chunk bytes from fd into buf
+			// If negative return value, it is an error. If it is 0, it is EOF. Generally, return value is number of bytes read.
+			break;
+		}
+		bread(buf, MIN(size, xfersize));
+		// bread is doing some sort of block read, not entirely sure
+		size -= chunk;
+	}
+}
+
+void initialize(iter_t iterations, void *cookie)
+{
+	state_t *state = (state_t *)cookie;
+
+	if (iterations)
+		return;
+
+	state->fd = -1;
+	if (state->clone)
+	{
+		char buf[128];
+		char *s;
+
+		/* copy original file into a process-specific one */
+		sprintf(buf, "%d", (int)getpid());
+		s = (char *)malloc(strlen(state->filename) + strlen(buf) + 1);
+		sprintf(s, "%s%d", state->filename, (int)getpid());
+		if (cp(state->filename, s, S_IREAD | S_IWRITE) < 0)
+		{
+			perror("creating private tempfile");
+			unlink(s);
+			exit(1);
+		}
+		strcpy(state->filename, s);
+	}
+}
+
+void init_open(iter_t iterations, void *cookie)
+{
+	state_t *state = (state_t *)cookie;
+	int ofd;
+
+	if (iterations)
+		return;
+
+	initialize(0, cookie);
+	CHK(ofd = open(state->filename, O_RDONLY));
+	state->fd = ofd;
+}
+
+void time_with_open(iter_t iterations, void *cookie)
+{
+	state_t *state = (state_t *)cookie;
+	char *filename = state->filename;
+	int fd;
+
+	while (iterations-- > 0)
+	{
+		fd = open(filename, O_RDONLY);
+		doit(fd);
+		close(fd);
+	}
+}
+
+void time_io_only(iter_t iterations, void *cookie)
+{
+	state_t *state = (state_t *)cookie;
+	int fd = state->fd;
+
+	while (iterations-- > 0)
+	{
+		lseek(fd, 0, SEEK_SET); // Moves file pointer to beginning of file descriptor
+		doit(fd);
+	}
+}
+
+void cleanup(iter_t iterations, void *cookie)
+{
+	state_t *state = (state_t *)cookie;
+
+	if (iterations)
+		return;
+
+	if (state->fd >= 0)
+		close(state->fd);
+	if (state->clone)
+		unlink(state->filename);
+}
 
 void parallel_open(iter_t iterations, void *cookie){
     for (int i = 0; i < 2; i ++)
