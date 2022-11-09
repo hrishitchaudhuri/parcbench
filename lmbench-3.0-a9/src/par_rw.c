@@ -126,18 +126,35 @@ void cleanup(iter_t iterations, void *cookie)
 }
 
 void parallel_open(iter_t iterations, void *cookie){
+    
+    pthread_t thread[2];
+
     for (int i = 0; i < 2; i ++)
     {
-        pthread_t thread;
-        pthread_create(&thread, NULL, time_with_open, NULL);
+    	printf("POpen - Creating thread %d",i);
+        pthread_create(&thread[i], NULL, time_with_open, NULL);
     }
+    for (int i = 0; i < 2; i ++)
+    {
+    	printf("POpen - Joining thread %d",i);
+        pthread_join(&thread[i], NULL);
+    }
+
 }
 
 void parallel_seek(iter_t iterations, void *cookie) {
+
+	pthread_t thread[2];
+
     for (int i = 0; i < 2; i ++)
     {
-        pthread_t thread;
-        pthread_create(&thread, NULL, time_io_only, NULL);
+    	printf("PSeek - Creating thread %d",i);
+        pthread_create(&thread[i], NULL, time_io_only, NULL);
+    }
+    for (int i = 0; i < 2; i ++)
+    {
+    	printf("PSeek - Joining thread %d",i);
+        pthread_join(&thread[i], NULL);
     }
 }
 
@@ -207,11 +224,12 @@ int main(int ac, char **av)
 	buf = (void *)valloc(XFERSIZE); // Reserves memory which is page aligned, i.e., allocates virtual memory?
 	bzero(buf, XFERSIZE);			// erases XFERSIZE of memory starting at buf
 
-	// fprintf(stderr, "Begin\n");
+	fprintf(stderr, "Begin\n");
 	if (!strcmp("open2close", av[optind + 1]))
 	{
 		benchmp(initialize, parallel_open, cleanup,
 				0, parallel, warmup, repetitions, &state);
+		printf("hello mr i'm done");
 	}
 	else if (!strcmp("io_only", av[optind + 1]))
 	{
@@ -220,6 +238,7 @@ int main(int ac, char **av)
 	}
 	else
 		lmbench_usage(ac, av, usage);
+	printf("%d,%d,%d",count,get_n(),parallel);
 	bandwidth(count, get_n() * parallel, 1);
 	// fprintf(stderr, "Hi!\n");
 	return (0);
