@@ -1,7 +1,7 @@
 README for lmbench 2alpha8 net release.
 
 To build the container, run: `docker build -t lmbench -f Dockerfile .`
-To run the container: `docker container run -it lmbench`
+To run the container: `docker container run -it -v $PWD:/do-you-even-bench-bro lmbench`
 
 To run the benchmark, you should be able to say:
 
