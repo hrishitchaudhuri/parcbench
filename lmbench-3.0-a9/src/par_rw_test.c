@@ -12,6 +12,15 @@ size_t size_;
 size_t xfersize;
 void* buf;
 
+void my_sigchld_handler(int sig) {
+    pid_t p;
+    int status;
+
+    while ((p=waitpid(-1, &status, 0)) != -1) {
+       printf("Oh no %d is dead\n", p);
+    }
+}
+
 void do_read(int fd) {
     size_t size, chunk;
 
@@ -31,44 +40,53 @@ void do_read(int fd) {
 }
 
 void initialize(iter_t iterations, void* cookie) {
-    state_t *state = (state_t *) cookie;
-    int ofd;
-
+    state_t* state_ = (state_t *) cookie;
     if (iterations) {
         return;
     }
 
+    state_->fd = -1;
+
+    /*
     if ((int)(ofd = open(state->filename, O_RDONLY)) == -1) { 
         printf("%s\n", state->filename);
         perror("ofd = open(state->filename, O_RDONLY)"); 
         exit(1); 
     }
 
+    printf("[INIT] File descriptor: %d\n", ofd);
+
     state->fd = ofd;
+    */
 }
 
 void fork_and_read(iter_t iterations, void* cookie) {
     state_t *state = (state_t *) cookie;
     int status;
     pid_t pid[state->num_readers];
-    int fd = state->fd;
 
-    while (iterations-- > 0) {
-        for (int i = 0; i < state->num_readers; i++) {
-            pid[i] = fork();
-
-            if (pid[i] == 0) {
-                lseek(fd, 0, SEEK_SET);
-                do_read(fd);
-                exit(0);
-            }
-
-            else if (pid[i] < 0) {
-                printf("Failed to fork: %d\n", i);
-                status = -1;
-            }
-        }
+    int ofd;
+    
+    if ((int)(ofd = open(state->filename, O_RDONLY)) == -1) { 
+        printf("%s\n", state->filename);
+        perror("ofd = open(state->filename, O_RDONLY)"); 
+        exit(1); 
     }
+
+    printf("[INIT] File descriptor: %d\n", ofd);
+
+    state->fd = ofd;
+    printf("# Readers = %d\n", state->num_readers);
+
+    // signal(SIGCHLD, my_sigchld_handler);
+    while (iterations-- > 0) {
+            if (lseek(state->fd, 0, SEEK_SET) < 0) {
+                perror("Seek failed");
+            };
+            do_read(state->fd);
+    }
+
+    close(state->fd);
 }
 
 void cleanup(iter_t iterations, void* cookie) {
@@ -76,9 +94,6 @@ void cleanup(iter_t iterations, void* cookie) {
 
     if (iterations) 
         return;
-
-    if (state->fd >= 0)
-        close(state->fd);
 }
 
 int main(int argc, char *argv[]) {
@@ -94,7 +109,7 @@ int main(int argc, char *argv[]) {
 
     strcpy(state.filename, argv[3]);
 
-    int parallel = 1;
+    int parallel = state.num_readers;
 	int warmup = 0;
 	int repetitions = -1;
 
@@ -114,6 +129,10 @@ int main(int argc, char *argv[]) {
     benchmp(initialize, fork_and_read, cleanup,
 			0, parallel, warmup, repetitions, &state);
 
+    // initialize(0, &state);
+    // fork_and_read(1, &state);
+    // cleanup(0, &state);
+    
     bandwidth(size_, get_n() * parallel, 1);
     return 0;
 }
