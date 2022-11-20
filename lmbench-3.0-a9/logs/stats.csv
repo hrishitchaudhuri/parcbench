@@ -1,4 +1,4 @@
-Filename,No.of Parallel Processes,Data,Time Taken(sec),Bandwidth,Time Elapsed(sec)
+Filename,No.of Parallel Processes,Data(MB),Time Taken(sec),Bandwidth(MB/sec),Time Elapsed(sec)
 10000000_1_o2c.txt,1,10,0.0018,5671.3455,0.62
 20000000_1_o2c.txt,1,20,0.0036,5562.5087,0.59
 30000000_1_o2c.txt,1,30,0.0055,5409.304,0.58
