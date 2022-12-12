@@ -59,23 +59,23 @@ void initialize(iter_t iterations, void *cookie)
 		return;
 
 	state->fd = -1;
-	if (state->clone)
-	{
-		char buf[128];
-		char *s;
+	// if (state->clone)
+	// {
+	// 	char buf[128];
+	// 	char *s;
 
-		/* copy original file into a process-specific one */
-		sprintf(buf, "%d", (int)getpid());
-		s = (char *)malloc(strlen(state->filename) + strlen(buf) + 1);
-		sprintf(s, "%s%d", state->filename, (int)getpid());
-		if (cp(state->filename, s, S_IREAD | S_IWRITE) < 0)
-		{
-			perror("creating private tempfile");
-			unlink(s);
-			exit(1);
-		}
-		strcpy(state->filename, s);
-	}
+	// 	/* copy original file into a process-specific one */
+	// 	sprintf(buf, "%d", (int)getpid());
+	// 	s = (char *)malloc(strlen(state->filename) + strlen(buf) + 1);
+	// 	sprintf(s, "%s%d", state->filename, (int)getpid());
+	// 	if (cp(state->filename, s, S_IREAD | S_IWRITE) < 0)
+	// 	{
+	// 		perror("creating private tempfile");
+	// 		unlink(s);
+	// 		exit(1);
+	// 	}
+	// 	strcpy(state->filename, s);
+	// }
 }
 
 void init_open(iter_t iterations, void *cookie)
@@ -99,14 +99,24 @@ void *time_with_open(void *arguments)
 	char *filename = state->filename;
 	int itr = args->iterations; 
 	int fd;
-	// printf("%d",iterations);
+
+	
+
 	while (itr-- > 0)
 	{
-		printf("I am doing time with open");
-		printf("%d \n",itr);
-		fd = open(filename, O_RDONLY);
-		doit(fd);
-		close(fd);
+		printf("\n I am doing time with open");
+		printf("\n Iteration: %d \n",itr);
+		if ((int)(fd = open(state->filename, O_RDONLY)) == -1) { 
+			printf("%s\n", state->filename);
+			perror("fd = open(state->filename, O_RDONLY)"); 
+			exit(1); 
+    	}
+
+    	printf("[INIT] File descriptor: %d\n", fd);
+		state->fd = fd;
+
+		doit(state->fd);
+		close(state->fd);
 		printf("I am done with time with open");
 	}
 	pthread_exit(NULL);
@@ -126,9 +136,9 @@ void time_io_only(void *arguments)
 
 	while (itr-- > 0)
 	{
-		printf("I am doing time io");
-		lseek(fd, 0, SEEK_SET); // Moves file pointer to beginning of file descriptor
-		doit(fd);
+		printf("\n I am doing time io");
+		lseek(state->fd, 0, SEEK_SET); // Moves file pointer to beginning of file descriptor
+		doit(state->fd);
 		printf("I am done with time io");
 
 	}
@@ -151,18 +161,18 @@ void parallel_open(iter_t iterations, void *cookie){
     printf("yo bro parallel open");
     pthread_t thread[2];
 	struct arg_struct args;
-	printf(" yo before args: %lu \n",iterations);
+	printf("yo before args: %lu \n",iterations);
 	args.iterations = iterations;
 	args.cookie = cookie;
 
     for (int i = 0; i < 2; i ++)
     {
-    	printf("POpen - Creating thread %d",i);
+    	printf("\nPOpen - Creating thread %d",i);
         pthread_create(&thread[i], NULL, time_with_open, (void *)&args);
     }
     for (int i = 0; i < 2; i ++)
     {
-    	printf("POpen - Joining thread %d",i);
+    	printf("\nPOpen - Joining thread %d",i);
         pthread_join(&thread[i], NULL);
     }
 
@@ -177,12 +187,12 @@ void parallel_seek(iter_t iterations, void *cookie) {
 
     for (int i = 0; i < 2; i ++)
     {
-    	printf("PSeek - Creating thread %d",i);
+    	printf("\nPSeek - Creating thread %d",i);
         pthread_create(&thread[i], NULL, time_io_only, (void *)&args);
     }
     for (int i = 0; i < 2; i ++)
     {
-    	printf("PSeek - Joining thread %d",i);
+    	printf("\nPSeek - Joining thread %d",i);
         pthread_join(&thread[i], NULL);
     }
 }
