@@ -15,6 +15,11 @@ void *buf;		 /* do the I/O here */
 size_t xfersize; /* do it in units of this */
 size_t count;	 /* bytes to move (can't be modified) */
 
+struct arg_struct {
+	int iterations;
+	void *cookie;
+};
+
 typedef struct _state
 {
 	char filename[256];
@@ -86,29 +91,46 @@ void init_open(iter_t iterations, void *cookie)
 	state->fd = ofd;
 }
 
-void time_with_open(iter_t iterations, void *cookie)
+void *time_with_open(void *arguments)
 {
-	state_t *state = (state_t *)cookie;
-	char *filename = state->filename;
-	int fd;
+	struct arg_struct *args = arguments;
 
-	while (iterations-- > 0)
+	state_t *state = (state_t *)args->cookie;
+	char *filename = state->filename;
+	int itr = args->iterations; 
+	int fd;
+	// printf("%d",iterations);
+	while (itr-- > 0)
 	{
+		printf("I am doing time with open");
+		printf("%d \n",itr);
 		fd = open(filename, O_RDONLY);
 		doit(fd);
 		close(fd);
+		printf("I am done with time with open");
 	}
+	pthread_exit(NULL);
+	return NULL;
 }
 
-void time_io_only(iter_t iterations, void *cookie)
+void time_io_only(void *arguments)
 {
-	state_t *state = (state_t *)cookie;
+	struct arg_struct *args = arguments;
+
+	state_t *state = (state_t *)args->cookie;
+	char *filename = state->filename;
+	int itr = args->iterations; 
+
+
 	int fd = state->fd;
 
-	while (iterations-- > 0)
+	while (itr-- > 0)
 	{
+		printf("I am doing time io");
 		lseek(fd, 0, SEEK_SET); // Moves file pointer to beginning of file descriptor
 		doit(fd);
+		printf("I am done with time io");
+
 	}
 }
 
@@ -126,13 +148,17 @@ void cleanup(iter_t iterations, void *cookie)
 }
 
 void parallel_open(iter_t iterations, void *cookie){
-    
+    printf("yo bro parallel open");
     pthread_t thread[2];
+	struct arg_struct args;
+	printf(" yo before args: %lu \n",iterations);
+	args.iterations = iterations;
+	args.cookie = cookie;
 
     for (int i = 0; i < 2; i ++)
     {
     	printf("POpen - Creating thread %d",i);
-        pthread_create(&thread[i], NULL, time_with_open, NULL);
+        pthread_create(&thread[i], NULL, time_with_open, (void *)&args);
     }
     for (int i = 0; i < 2; i ++)
     {
@@ -143,13 +169,16 @@ void parallel_open(iter_t iterations, void *cookie){
 }
 
 void parallel_seek(iter_t iterations, void *cookie) {
-
+    printf("yo bro parallel seek");
 	pthread_t thread[2];
+	struct arg_struct args;
+	args.iterations = iterations;
+	args.cookie = cookie;
 
     for (int i = 0; i < 2; i ++)
     {
     	printf("PSeek - Creating thread %d",i);
-        pthread_create(&thread[i], NULL, time_io_only, NULL);
+        pthread_create(&thread[i], NULL, time_io_only, (void *)&args);
     }
     for (int i = 0; i < 2; i ++)
     {
