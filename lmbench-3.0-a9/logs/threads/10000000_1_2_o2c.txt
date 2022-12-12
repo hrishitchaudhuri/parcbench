@@ -1,0 +1,6 @@
+GETOPT ind=1 n=1 arg= av[1]='-P'
+	P with arg 1
+GETOPT ind=3 n=1 arg=1 av[3]='10000000'
+10.0000 MB in 0.0017 secs, 5752.7463 MB/sec
+10000000,1056,129.20user 3.60system 0:31.34elapsed 104%CPU (0avgtext+0avgdata 1940maxresident)k
+0inputs+0outputs (0major+195minor)pagefaults 0swaps

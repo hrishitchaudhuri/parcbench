@@ -4,6 +4,8 @@
 #include "lib_timing.c"
 #include <sys/syscall.h>
 
+#define NUM_THREADS 4
+
 #define gettidv1() syscall(__NR_gettid) // new form
 #define MINSZ (sizeof(TYPE) * 128)
 #define CHK(x)          \
@@ -101,7 +103,7 @@ void *time_with_open(void *arguments)
 	char *filename = state->filename;
 	int itr = args->iterations; 
 	int fd;
-	printf("\n I am doing time with open, p_id: %ld", (long int)gettidv1());
+	//printf("\n I am doing time with open, p_id: %ld", (long int)gettidv1());
 
 	while (itr-- > 0)
 	{
@@ -111,13 +113,13 @@ void *time_with_open(void *arguments)
 			exit(1); 
     	}
 
-    	printf("\n Iteration, [INIT] File descriptor: %d %d\n", itr, fd);
+    	//printf("\n Iteration, [INIT] File descriptor: %d %d\n", itr, fd);
 		state->fd = fd;
 
 		doit(state->fd);
 		close(state->fd);
 	}
-	printf("I am done with time with open, p_id: %ld", (long int)gettidv1());
+	//printf("I am done with time with open, p_id: %ld", (long int)gettidv1());
 	// pthread_exit(NULL);
 	return NULL;
 }
@@ -130,7 +132,7 @@ void *time_io_only(void *arguments)
 	char *filename = state->filename;
 	int itr = args->iterations; 
 	int fd = state->fd;
-	printf("\n I am doing time io, p_id: %ld", (long int)gettidv1());
+	//printf("\n I am doing time io, p_id: %ld", (long int)gettidv1());
 
 	while (itr-- > 0)
 	{
@@ -138,7 +140,7 @@ void *time_io_only(void *arguments)
 		doit(state->fd);
 
 	}
-	printf("I am done with time io, p_id: %ld", (long int)gettidv1());
+	//printf("I am done with time io, p_id: %ld", (long int)gettidv1());
 	// pthread_exit(NULL);
 	return NULL;
 
@@ -158,43 +160,43 @@ void cleanup(iter_t iterations, void *cookie)
 }
 
 void parallel_open(iter_t iterations, void *cookie){
-    printf("----------------------------------------------------");
-    pthread_t thread[2];
+    //printf("----------------------------------------------------");
+    pthread_t thread[NUM_THREADS];
 
-    for (int i = 0; i < 2; i ++)
+    for (int i = 0; i < NUM_THREADS; i ++)
     {
 		struct arg_struct args;
 		args.p_id = i;
 		args.iterations = iterations;
 		args.cookie = cookie;
         pthread_create(&thread[i], NULL, time_with_open, (void *)&args);
-    	printf("\nPOpen - Created thread %ld",(long int)gettidv1());
+    	//printf("\nPOpen - Created thread %ld",(long int)gettidv1());
     }
-    for (int i = 0; i < 2; i ++)
+    for (int i = 0; i < NUM_THREADS; i ++)
     {
-    	printf("\nPOpen - Joining thread %ld",(long int)gettidv1());
+    	//printf("\nPOpen - Joining thread %ld",(long int)gettidv1());
         pthread_join(thread[i], NULL);
     }
-    printf("----------------------------------------------------");
+    //printf("----------------------------------------------------");
 
 }
 
 void parallel_seek(iter_t iterations, void *cookie) {
-    printf("yo bro parallel seek");
-	pthread_t thread[2];
+    //printf("yo bro parallel seek");
+	pthread_t thread[NUM_THREADS];
 
-    for (int i = 0; i < 2; i ++)
+    for (int i = 0; i < NUM_THREADS; i ++)
     {
 		struct arg_struct args;
 		args.iterations = iterations;
 		args.cookie = cookie;
 		args.p_id = i;
         pthread_create(&thread[i], NULL, time_io_only, (void *)&args);
-		printf("\nPSeek - Created thread %ld",(long int)gettidv1());
+		//printf("\nPSeek - Created thread %ld",(long int)gettidv1());
     }
-    for (int i = 0; i < 2; i ++)
+    for (int i = 0; i < NUM_THREADS; i ++)
     {
-    	printf("\nPSeek - Joining thread %ld",(long int)gettidv1());
+    	//printf("\nPSeek - Joining thread %ld",(long int)gettidv1());
         pthread_join(thread[i], NULL);
     }
 }
@@ -265,12 +267,13 @@ int main(int ac, char **av)
 	buf = (void *)valloc(XFERSIZE); // Reserves memory which is page aligned, i.e., allocates virtual memory?
 	bzero(buf, XFERSIZE);			// erases XFERSIZE of memory starting at buf
 
-	fprintf(stderr, "Begin\n");
+	//fprintf(stderr, "Begin\n");
+	fprintf("#Threads: %d\n",NUM_THREADS);
 	if (!strcmp("open2close", av[optind + 1]))
 	{
 		benchmp(initialize, parallel_open, cleanup,
 				0, parallel, warmup, repetitions, &state);
-		printf("hello mr i'm done");
+		//printf("hello mr i'm done");
 	}
 	else if (!strcmp("io_only", av[optind + 1]))
 	{
