@@ -1,8 +1,8 @@
 GETOPT ind=1 n=1 arg= av[1]='-P'
 	P with arg 1
 GETOPT ind=3 n=1 arg=1 av[3]='30000000'
-fd = open(state->filename, O_RDONLY): Too many open files
-../freqs.json
-30.0000 MB in 0.0000 secs, inf MB/sec
-30000000,1,130.19user 7.02system 0:31.81elapsed 117%CPU (0avgtext+0avgdata 2268maxresident)k
-0inputs+0outputs (0major+690minor)pagefaults 0swaps
+30.0000 MB in 0.0581 secs, 516.6535 MB/sec
+30000000,1,1
+real	0m1.382s
+user	0m0.567s
+sys	0m10.194s

@@ -1,6 +1,8 @@
 GETOPT ind=1 n=1 arg= av[1]='-P'
 	P with arg 1
 GETOPT ind=3 n=1 arg=1 av[3]='40000000'
-40.0000 MB in 0.0285 secs, 1404.7533 MB/sec
-40000000,4,110.01user 5.35system 0:11.34elapsed 135%CPU (0avgtext+0avgdata 1880maxresident)k
-0inputs+0outputs (0major+1045minor)pagefaults 0swaps
+40.0000 MB in 0.0358 secs, 1117.7868 MB/sec
+40000000,1,1
+real	0m1.759s
+user	0m1.198s
+sys	0m6.775s

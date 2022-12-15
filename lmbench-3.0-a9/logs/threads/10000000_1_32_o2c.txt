@@ -1,19 +1,8 @@
 GETOPT ind=1 n=1 arg= av[1]='-P'
 	P with arg 1
 GETOPT ind=3 n=1 arg=1 av[3]='10000000'
-fd = open(state->filename, O_RDONLY): Too many open files
-fd = open(state->filename, O_RDONLY): Too many open files
-../freqs.json
-../freqs.json
-../freqs.json
-../freqs.json
-../freqs.json
-../freqs.json
-../freqs.json
-../freqs.json
-../freqs.json
-../freqs.json
-../freqs.json
-10.0000 MB in 0.0000 secs, inf MB/sec
-10000000,1,110.33user 3.15system 0:11.13elapsed 121%CPU (0avgtext+0avgdata 2076maxresident)k
-0inputs+0outputs (0major+769minor)pagefaults 0swaps
+10.0000 MB in 0.0099 secs, 1013.2739 MB/sec
+10000000,1,1
+real	0m0.796s
+user	0m0.540s
+sys	0m1.374s
