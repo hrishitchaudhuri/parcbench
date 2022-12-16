@@ -1,8 +1,0 @@
-GETOPT ind=1 n=1 arg= av[1]='-P'
-	P with arg 1
-GETOPT ind=3 n=1 arg=1 av[3]='50000000'
-50.0000 MB in 0.2068 secs, 241.7327 MB/sec
-50000000,1,1
-real	0m3.267s
-user	0m0.660s
-sys	0m41.696s
